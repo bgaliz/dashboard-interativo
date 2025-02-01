@@ -14,13 +14,15 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/modal/modal_component";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from 'react-hook-form';
 import { SelectTrigger } from "@radix-ui/react-select";
 
-import {ChevronDownIcon} from "lucide-react"
+import {CircleChevronRightIcon} from "lucide-react"
 import { SelectComponent } from "@/components/select/select_component";
 import { DatePicker } from "@/components/datepicker/datepicker_component";
+import { useStore } from "@/store/store";
+import { Badge } from "@/components/ui/badge";
 
 const RESPONSAVEIS = [
     {key: 'sergio', name: 'Sérgio'},
@@ -31,7 +33,10 @@ const RESPONSAVEIS = [
 
 export default function Projetos(){
     const [open, setOpen] = useState(false)
-    const { register, setValue, handleSubmit, control, reset, formState: { errors } } = useForm({
+    const createProject = useStore((state) => state.createProject)
+    const projects = useStore((state) => state.projects)
+
+    const { register, handleSubmit, control, reset, formState: { errors } } = useForm({
         name: '',
         startDate: '',
         endDate: '',
@@ -40,10 +45,23 @@ export default function Projetos(){
     });
 
     const onSubmit = (data) => {
-        console.log(data)
         reset();
         setOpen(!open)
+        projects.push(data)
+        createProject(projects)
     }
+
+    const status = useCallback((date) => {
+        return new Date() < new Date(date) ? 'Ativo' : 'Atrasado'
+    }, [projects])
+
+    const variant = useCallback((date) => {
+        return new Date() < new Date(date) ? 'Ativo' : 'destructive'
+    }, [projects])
+
+    useEffect(() => {
+        console.log('projects', projects)
+    }, [projects])
 
     return(
         <>
@@ -69,27 +87,18 @@ export default function Projetos(){
                             <div className="flex justify-between">
                                 <div className="flex flex-col gap-3">
                                     <Label> Data início:</Label>
-                                    {/* <Input
-                                        placeholder="Nome do projeto"
-                                        className="mt-2 w-[150px]" 
-                                        type="date"
-                                        {...register("startDate", {required: true})}
-                                    /> */}
-                                    <DatePicker 
+                                    <DatePicker
                                         size="medium"
+                                        name="startDate"
+                                        control={control}
                                     />
                                 </div>
                                 <div className="flex flex-col gap-3">
                                     <Label> Data Fim:</Label>
-                                    {/* <Input
-                                        placeholder="Nome do projeto"
-                                        className="mt-2 w-[150px]" 
-                                        type="date"
-                                        {...register("endDate", {required: true})}
-                                    /> */}
-
-                                    <DatePicker 
+                                    <DatePicker
                                         size="medium"
+                                        name="endDate"
+                                        control={control}
                                     />
                                 </div>
                             </div>
@@ -107,6 +116,29 @@ export default function Projetos(){
                             />
                         </form>
                     </Modal>
+                </div>
+
+                <div className="mt-10">
+                    {
+                        projects.map(project => (
+                            <div key={project.name} >
+                                <div className="grid grid-cols-2">
+                                    <span className="text-xs">Nome do Projeto</span>
+                                    <span className="text-xs">Status</span>
+                                    <span className="text-xs"></span>
+                                </div>
+                                <div
+                                    className="border-[1px] rounded-[8px] my-3 p-4 cursor-pointer hover:scale-[1.01] duration-200"
+                                >
+                                    <div className="grid grid-cols-3">
+                                        <span>{project.name}</span>
+                                        <Badge variant={variant(project.endDate)} className='w-auto'>{status(project.endDate)}</Badge>
+                                        <CircleChevronRightIcon />
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    }
                 </div>
             </div>
         </>

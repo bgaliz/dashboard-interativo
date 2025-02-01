@@ -1,10 +1,11 @@
 import Header from "@/components/header/header_component";
 import Section from "@/components/section/section_component"
+import { useStore } from "@/store/store";
 
 import { FolderXIcon } from "lucide-react"
 
 export default function Dashboard() {
-    
+    const projects = useStore(state => state.projects);
 
     return (
         <>
@@ -22,6 +23,7 @@ export default function Dashboard() {
                 <Section>
                     <div className="w-[100%] h-[100%] flex justify-start">
                         <h2>Projetos</h2>
+                        <p>{projects.name}</p>
                     </div>
                 </Section>
             </div>
